@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify on r1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 240px;
+            height: 282px;
+            background: #191414;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-size: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 8px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 4px;
+            background: #282828;
+            border-radius: 4px;
+            font-size: 11px;
+            min-height: 20px;
+            word-break: break-word;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status.error {
+            color: #f47d6b;
+        }
+        
+        .status.ok {
+            color: #1db954;
+        }
+        
+        .now-playing {
+            text-align: center;
+        }
+        
+        .album-art {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 8px;
+            background: #333;
+            border-radius: 4px;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .song-title {
+            font-weight: 600;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        
+        .song-artist {
+            font-size: 11px;
+            color: #b3b3b3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 6px 0;
+        }
+        
+        button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: #1db954;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #1ed760;
+        }
+        
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            background: #282828;
+            color: #fff;
+            font-size: 11px;
+        }
+        
+        .search-box input::placeholder {
+            color: #777;
+        }
+        
+        .search-box button {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 14px;
+        }
+        
+        .search-results {
+            max-height: 80px;
+            overflow-y: auto;
+            background: #282828;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        
+        .search-result-item {
+            padding: 6px 8px;
+            border-bottom: 1px solid #404040;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .search-result-item:hover {
+            background: #404040;
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .login-prompt {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .login-prompt a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #1db954;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .volume-indicator {
+            text-align: center;
+            font-size: 11px;
+            color: #b3b3b3;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status" id="status">Checking DRM...</div>
+        
+        <div id="login-view" style="display: none; text-align: center; padding: 30px 10px;">
+            <p style="margin-bottom: 10px;">Sign in with Spotify</p>
+            <a href="#" id="login-button" style="display: inline-block; padding: 8px 16px; background: #1db954; color: #fff; text-decoration: none; border-radius: 20px; font-size: 12px;">Login</a>
+            <p id="redirect-note" style="font-size: 9px; color: #777; margin-top: 12px; word-break: break-all;"></p>
+        </div>
+        
+        <div id="player-view" style="display: none;">
+            <div class="now-playing">
+                <div class="album-art" id="album-art"></div>
+                <div class="song-title" id="song-title">Not playing</div>
+                <div class="song-artist" id="song-artist"></div>
+            </div>
+            
+            <div class="controls">
+                <button id="prev-btn" title="Previous">⏮</button>
+                <button id="play-btn" title="Play/Pause">▶</button>
+                <button id="next-btn" title="Next">⏭</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search..." autocomplete="off">
+                <button id="search-btn">🔍</button>
+            </div>
+            
+            <div class="search-results" id="search-results" style="display: none;"></div>
+            
+            <div class="volume-indicator" id="volume-indicator">Volume: 100%</div>
+        </div>
+    </div>
+
+    <script>
+        // Spotify on r1. Original layout by OS3 (9/30/2026), script rewritten the same day to fix
+        // the login address, token expiry, album playback, and to use the r1's scroll wheel and side button.
+        const CLIENT_ID = 'fda54ceb9f834845b1e50aed165e8cc2';     // public by design; never put the Client Secret here
+        const REDIRECT_URI = location.origin + location.pathname;  // wherever this page is hosted
+        const SCOPES = 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state';
+
+        const UI = {
+            status: document.getElementById('status'),
+            loginView: document.getElementById('login-view'),
+            redirectNote: document.getElementById('redirect-note'),
+            playerView: document.getElementById('player-view'),
+            loginBtn: document.getElementById('login-button'),
+            albumArt: document.getElementById('album-art'),
+            songTitle: document.getElementById('song-title'),
+            songArtist: document.getElementById('song-artist'),
+            playBtn: document.getElementById('play-btn'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            searchInput: document.getElementById('search-input'),
+            searchBtn: document.getElementById('search-btn'),
+            searchResults: document.getElementById('search-results'),
+            volumeIndicator: document.getElementById('volume-indicator')
+        };
+
+        let player = null;
+        let deviceId = null;
+        let volume = 50;
+
+        // Storage: the r1's creation storage when available (values must be base64), else localStorage.
+        const store = {
+            async get(key) {
+                try {
+                    if (window.creationStorage && window.creationStorage.plain) {
+                        const v = await window.creationStorage.plain.getItem(key);
+                        if (v) return atob(v);
+                    }
+                } catch (e) {}
+                return localStorage.getItem(key);
+            },
+            async set(key, value) {
+                try {
+                    if (window.creationStorage && window.creationStorage.plain) {
+                        await window.creationStorage.plain.setItem(key, btoa(value));
+                    }
+                } catch (e) {}
+                localStorage.setItem(key, value);
+            }
+        };
+
+        function setStatus(text, type = 'ok') {
+            UI.status.textContent = text;
+            UI.status.className = 'status ' + type;
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // ===== STEP 1: can this r1 play Spotify's protected audio? =====
+        async function checkDRM() {
+            try {
+                await navigator.requestMediaKeySystemAccess('com.widevine.alpha', [{
+                    initDataTypes: ['cenc'],
+                    audioCapabilities: [{ contentType: 'audio/mp4; codecs="mp4a.40.2"' }]
+                }]);
+                setStatus('DRM OK', 'ok');
+                return true;
+            } catch (err) {
+                setStatus("This r1 can't play Spotify audio: " + err.message, 'error');
+                return false;
+            }
+        }
+
+        // ===== STEP 2: login with PKCE, no Client Secret =====
+        function randomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            const bytes = crypto.getRandomValues(new Uint8Array(length));
+            return Array.from(bytes, b => chars[b % chars.length]).join('');
+        }
+
+        async function codeChallenge(verifier) {
+            const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+            return btoa(String.fromCharCode(...new Uint8Array(hash)))
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        async function startLogin() {
+            const verifier = randomString(64);
+            const state = randomString(16);
+            await store.set('pkce_verifier', verifier);
+            await store.set('oauth_state', state);
+            const params = new URLSearchParams({
+                client_id: CLIENT_ID,
+                response_type: 'code',
+                redirect_uri: REDIRECT_URI,
+                code_challenge_method: 'S256',
+                code_challenge: await codeChallenge(verifier),
+                state: state,
+                scope: SCOPES
+            });
+            location.href = 'https://accounts.spotify.com/authorize?' + params;
+        }
+
+        async function tokenRequest(body) {
+            const r = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(Object.assign({ client_id: CLIENT_ID }, body))
+            });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(data.error_description || data.error || ('HTTP ' + r.status));
+            await store.set('access_token', data.access_token);
+            await store.set('expires_at', String(Date.now() + (data.expires_in || 3600) * 1000));
+            if (data.refresh_token) await store.set('refresh_token', data.refresh_token);  // Spotify rotates it
+            return data.access_token;
+        }
+
+        async function getToken(force = false) {
+            const token = await store.get('access_token');
+            const expiresAt = Number(await store.get('expires_at') || 0);
+            if (!force && token && Date.now() < expiresAt - 60000) return token;
+            const refresh = await store.get('refresh_token');
+            if (!refresh) throw new Error('Not logged in');
+            return tokenRequest({ grant_type: 'refresh_token', refresh_token: refresh });
+        }
+
+        async function api(path, options = {}) {
+            let force = false;
+            for (let attempt = 0; attempt < 5; attempt++) {
+                const token = await getToken(force);
+                const headers = Object.assign({ Authorization: 'Bearer ' + token },
+                    options.body ? { 'Content-Type': 'application/json' } : {});
+                const r = await fetch('https://api.spotify.com/v1/' + path, Object.assign({}, options, { headers }));
+                if (r.status === 401 && !force) { force = true; continue; }
+                // Spotify returned intermittent 502s on 9/30/2026; a short wait and retry usually works
+                if (r.status >= 500 && attempt < 4) { await new Promise(res => setTimeout(res, 500 * (attempt + 1))); continue; }
+                if (!r.ok) {
+                    const d = await r.json().catch(() => ({}));
+                    throw new Error((d.error && d.error.message) || ('HTTP ' + r.status));
+                }
+                return r.status === 204 ? null : r.json().catch(() => null);
+            }
+        }
+
+        // ===== STEP 3: make this r1 a Spotify speaker =====
+        function startPlayer() {
+            window.onSpotifyWebPlaybackSDKReady = () => {
+                player = new Spotify.Player({
+                    name: 'Rabbit R1',
+                    getOAuthToken: cb => getToken().then(cb).catch(() => setStatus('Login expired. Reload to sign in.', 'error')),
+                    volume: volume / 100
+                });
+                player.addListener('ready', async ({ device_id }) => {
+                    deviceId = device_id;
+                    setStatus('Ready on this r1', 'ok');
+                    try {
+                        await api('me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [device_id], play: false }) });
+                    } catch (e) {
+                        setStatus('Could not switch to r1: ' + e.message, 'error');
+                    }
+                });
+                player.addListener('not_ready', () => setStatus('Player went offline', 'error'));
+                player.addListener('player_state_changed', state => {
+                    if (!state) return;
+                    showTrack(state.track_window.current_track);
+                    UI.playBtn.textContent = state.paused ? '▶' : '⏸';
+                });
+                // account_error is what Spotify sends when the account is not Premium
+                ['initialization_error', 'authentication_error', 'account_error', 'playback_error'].forEach(ev =>
+                    player.addListener(ev, ({ message }) => setStatus(ev.replace('_', ' ') + ': ' + message, 'error')));
+                player.connect();
+            };
+            const s = document.createElement('script');
+            s.src = 'https://sdk.scdn.co/spotify-player.js';
+            document.head.appendChild(s);
+        }
+
+        // ===== STEP 4: screen and controls =====
+        function showTrack(track) {
+            if (!track) return;
+            UI.songTitle.textContent = track.name;
+            UI.songArtist.textContent = track.artists.map(a => a.name).join(', ');
+            const img = track.album.images[track.album.images.length - 1] || track.album.images[0];
+            if (img) UI.albumArt.style.backgroundImage = "url('" + img.url + "')";
+        }
+
+        async function search(query) {
+            if (!query.trim()) { UI.searchResults.style.display = 'none'; return; }
+            try {
+                const data = await api('search?' + new URLSearchParams({ q: query, type: 'track,album,playlist', limit: '4' }));
+                const results = [];
+                ((data.tracks && data.tracks.items) || []).filter(Boolean).forEach(t =>
+                    results.push({ name: t.name, sub: t.artists[0] && t.artists[0].name, uri: t.uri, type: 'track' }));
+                ((data.albums && data.albums.items) || []).filter(Boolean).forEach(a =>
+                    results.push({ name: a.name, sub: 'Album', uri: a.uri, type: 'album' }));
+                ((data.playlists && data.playlists.items) || []).filter(Boolean).forEach(p =>
+                    results.push({ name: p.name, sub: 'Playlist', uri: p.uri, type: 'playlist' }));
+                UI.searchResults.innerHTML = results.slice(0, 10).map(r =>
+                    '<div class="search-result-item" data-uri="' + escapeHtml(r.uri) + '" data-type="' + r.type + '">' +
+                    escapeHtml(r.name) + (r.sub ? ' • ' + escapeHtml(r.sub) : '') + '</div>').join('');
+                UI.searchResults.style.display = results.length ? 'block' : 'none';
+                UI.searchResults.querySelectorAll('.search-result-item').forEach(item =>
+                    item.addEventListener('click', () => {
+                        play(item.dataset.uri, item.dataset.type);
+                        UI.searchResults.style.display = 'none';
+                        UI.searchInput.value = '';
+                    }));
+            } catch (e) {
+                setStatus('Search failed: ' + e.message, 'error');
+            }
+        }
+
+        async function play(uri, type) {
+            if (!deviceId) { setStatus('Player not ready yet', 'error'); return; }
+            const body = type === 'track' ? { uris: [uri] } : { context_uri: uri };  // albums and playlists need context_uri
+            try {
+                await api('me/player/play?device_id=' + encodeURIComponent(deviceId), { method: 'PUT', body: JSON.stringify(body) });
+            } catch (e) {
+                setStatus('Play failed: ' + e.message, 'error');
+            }
+        }
+
+        function changeVolume(step) {
+            volume = Math.max(0, Math.min(100, volume + step));
+            UI.volumeIndicator.textContent = 'Volume: ' + volume + '%';
+            if (player) player.setVolume(volume / 100);
+        }
+
+        UI.loginBtn.addEventListener('click', e => { e.preventDefault(); startLogin(); });
+        UI.playBtn.addEventListener('click', () => player && player.togglePlay());
+        UI.prevBtn.addEventListener('click', () => player && player.previousTrack());
+        UI.nextBtn.addEventListener('click', () => player && player.nextTrack());
+        UI.searchBtn.addEventListener('click', () => search(UI.searchInput.value));
+        UI.searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') search(UI.searchInput.value); });
+
+        // r1 hardware: scroll wheel = volume, side button click = play/pause
+        window.addEventListener('scrollUp', () => changeVolume(5));
+        window.addEventListener('scrollDown', () => changeVolume(-5));
+        let lastLongPress = 0;
+        window.addEventListener('sideClick', () => {
+            if (Date.now() - lastLongPress < 1000) return;  // ignore the click that can follow a long press
+            if (player) player.togglePlay();
+        });
+
+        // r1 voice: hold the side button, say a song (or "album ...", "playlist ...", "artist ..."), let go
+        let listening = false;
+        window.addEventListener('longPressStart', () => {
+            if (!window.CreationVoiceHandler) { setStatus('Voice search needs the r1', 'error'); return; }
+            listening = true;
+            setStatus('Listening...', 'ok');
+            try { CreationVoiceHandler.postMessage('start'); } catch (e) {}
+        });
+        window.addEventListener('longPressEnd', () => {
+            lastLongPress = Date.now();
+            if (!listening) return;
+            listening = false;
+            try { CreationVoiceHandler.postMessage('stop'); } catch (e) {}
+            setStatus('Searching...', 'ok');
+        });
+        window.onPluginMessage = function (data) {
+            if (!data || data.type !== 'sttEnded') return;
+            const said = String(data.transcript || '').trim();
+            if (!said) { setStatus("Didn't catch that. Hold the button and try again.", 'error'); return; }
+            voicePlay(said);
+        };
+
+        async function voicePlay(said) {
+            setStatus('Heard: ' + said, 'ok');
+            const m = said.match(/^(?:play\s+)?(?:the\s+)?(album|playlist|artist)\s+(.+)$/i);
+            let query = m ? m[2] : said.replace(/^play\s+/i, '');
+            let type = m ? m[1].toLowerCase() : 'track';
+            if (type === 'artist') { query = 'artist:"' + query + '"'; type = 'track'; }
+            try {
+                const data = await api('search?' + new URLSearchParams({ q: query, type: type, limit: '1' }));
+                const items = ((data[type + 's'] && data[type + 's'].items) || []).filter(Boolean);
+                if (!items.length) { setStatus('Nothing on Spotify for "' + said + '"', 'error'); return; }
+                await play(items[0].uri, type);
+                setStatus('Playing ' + items[0].name, 'ok');
+            } catch (e) {
+                setStatus('Search failed: ' + e.message, 'error');
+            }
+        }
+        // mouse wheel, for testing in a desktop browser
+        document.addEventListener('wheel', e => changeVolume(e.deltaY < 0 ? 5 : -5), { passive: true });  // no preventDefault: it can crash r1 creations
+
+        // ===== start =====
+        async function init() {
+            if (!await checkDRM()) return;
+            const params = new URLSearchParams(location.search);
+            if (params.get('error')) setStatus('Spotify said: ' + params.get('error'), 'error');
+            if (params.get('code')) {
+                if (params.get('state') !== await store.get('oauth_state')) {
+                    setStatus('Login check failed. Try again.', 'error');
+                } else {
+                    try {
+                        await tokenRequest({
+                            grant_type: 'authorization_code',
+                            code: params.get('code'),
+                            redirect_uri: REDIRECT_URI,
+                            code_verifier: await store.get('pkce_verifier')
+                        });
+                    } catch (e) {
+                        setStatus('Login failed: ' + e.message, 'error');
+                    }
+                }
+                history.replaceState({}, document.title, location.pathname);
+            }
+            if (!await store.get('refresh_token')) {
+                UI.loginView.style.display = 'block';
+                UI.redirectNote.textContent = 'Redirect URI: ' + REDIRECT_URI;
+                return;
+            }
+            UI.playerView.style.display = 'flex';
+            UI.playerView.style.flexDirection = 'column';
+            setStatus('Connecting...', 'ok');
+            UI.volumeIndicator.textContent = 'Hold side button, say a song';
+            startPlayer();
+        }
+
+        init();
+    </script>
+</body>
+</html>
