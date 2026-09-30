@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R1 Creations</title>
+<style>
+  :root { --bg: #f6f4ee; --fg: #1b1a17; --muted: #6b675d; --card: #ffffff; --line: #e4e0d4; --accent: #9a7a22; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0e0e10; --fg: #f2efe6; --muted: #8d8a80; --card: #17171a; --line: #2a2926; --accent: #d4b25a; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: -apple-system, system-ui, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p { color: var(--muted); line-height: 1.5; }
+  .card { display: flex; gap: 20px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-top: 20px; flex-wrap: wrap; }
+  .qr { background: #fff; padding: 12px; border-radius: 10px; line-height: 0; }
+  .info h2 { margin: 0 0 6px; font-size: 18px; display: flex; gap: 8px; align-items: center; }
+  .info img { width: 28px; height: 28px; border-radius: 6px; }
+  .info a { color: var(--accent); }
+  ol { color: var(--muted); padding-left: 18px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<main>
+  <h1>R1 Creations</h1>
+  <p>Small apps for the Rabbit R1. To install one, open the R1's camera and point it at the QR code.</p>
+
+  <div id="list"></div>
+
+  <ol>
+    <li>On the R1, open the camera and scan the code.</li>
+    <li>The R1 asks to add the creation. Accept.</li>
+    <li>Open it from the creations list on the R1.</li>
+  </ol>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // Each creation: bump "version" after an update so the R1 loads the new copy.
+  var CREATIONS = [
+    { folder: "tasbih", title: "Tasbih", version: 1, themeColor: "#d4b25a",
+      description: "Dhikr counter. Side button or scroll wheel counts, 33, 33, 34 after salah." }
+  ];
+  var base = location.origin + location.pathname.replace(/index\.html$/, "").replace(/\/?$/, "/");
+  var list = document.getElementById("list");
+  CREATIONS.forEach(function (c) {
+    var url = base + c.folder + "/?v=" + c.version;
+    var payload = JSON.stringify({ title: c.title, url: url, description: c.description,
+                                   iconUrl: base + c.folder + "/icon.png", themeColor: c.themeColor });
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<div class="qr"></div><div class="info"><h2><img alt="" src="' + c.folder + '/icon.png">' +
+      c.title + '</h2><p>' + c.description + '</p><p><a href="' + url + '">Open in this browser</a></p></div>';
+    list.appendChild(card);
+    new QRCode(card.querySelector(".qr"), { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+  });
+</script>
+</body>
+</html>

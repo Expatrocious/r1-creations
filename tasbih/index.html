@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=240, height=282, initial-scale=1, user-scalable=no">
+<title>Tasbih</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { width: 240px; height: 282px; overflow: hidden; background: #0e0e10; color: #f2efe6;
+    font-family: -apple-system, "Roboto", "Noto Sans", sans-serif; }
+  #app { position: relative; width: 240px; height: 282px; display: flex; flex-direction: column; align-items: center; }
+
+  .top { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 0; font-size: 11px; color: #8d8a80; }
+  .mode { padding: 3px 8px; border: 1px solid #2c2b27; border-radius: 10px; color: #d4b25a; }
+
+  .dhikr { margin-top: 10px; text-align: center; height: 62px; }
+  .arabic { font-family: "Noto Naskh Arabic", "Geeza Pro", serif; font-size: 26px; line-height: 34px; direction: rtl; color: #f2efe6; }
+  .translit { font-size: 12px; color: #d4b25a; margin-top: 2px; }
+
+  .ring { position: relative; width: 132px; height: 132px; margin-top: 6px; }
+  .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 7; }
+  .ring .track { stroke: #1f1e1b; }
+  .ring .bar { stroke: #d4b25a; stroke-linecap: round; transition: stroke-dashoffset 0.15s linear; }
+  .count { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .num { font-size: 46px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+  .of { font-size: 11px; color: #8d8a80; margin-top: 4px; }
+
+  .phases { display: flex; gap: 6px; margin-top: 8px; }
+  .dot { width: 26px; height: 5px; border-radius: 3px; background: #2c2b27; }
+  .dot.done { background: #d4b25a; }
+  .dot.now { background: #7a6a3a; }
+
+  .bottom { position: absolute; bottom: 6px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 10px; color: #6f6c63; }
+  .btn { padding: 4px 9px; border: 1px solid #2c2b27; border-radius: 10px; color: #b9b5a9; background: #151513; font-size: 10px; }
+
+  .flash { animation: flash 0.35s ease-out; }
+  @keyframes flash { from { opacity: 0.35; } to { opacity: 1; } }
+  .confirm { position: absolute; inset: 0; background: rgba(14,14,16,0.94); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 13px; }
+  .confirm.show { display: flex; }
+  .confirm .row { display: flex; gap: 10px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <span class="mode" id="modeBtn">After salah</span>
+    <span id="today">Today 0</span>
+  </div>
+
+  <div class="dhikr">
+    <div class="arabic" id="arabic"></div>
+    <div class="translit" id="translit"></div>
+  </div>
+
+  <div class="ring" id="ring">
+    <svg viewBox="0 0 132 132"><circle class="track" cx="66" cy="66" r="58"/><circle class="bar" id="bar" cx="66" cy="66" r="58"/></svg>
+    <div class="count"><div class="num" id="num">0</div><div class="of" id="of">of 33</div></div>
+  </div>
+
+  <div class="phases" id="phases"></div>
+
+  <div class="bottom">
+    <span class="btn" id="resetBtn">Reset</span>
+    <span id="hint">Wheel or button to count</span>
+    <span id="total">All 0</span>
+  </div>
+
+  <div class="confirm" id="confirm">
+    <div>Reset this count?</div>
+    <div class="row"><span class="btn" id="yesBtn">Reset</span><span class="btn" id="noBtn">Keep</span></div>
+  </div>
+</div>
+
+<script>
+// Tasbih for the Rabbit R1. Built 9/30/2026.
+// Count: side button, scroll wheel down, or tap the ring. Scroll wheel up undoes one.
+// "After salah" follows the hadith of Ka'b ibn 'Ujrah in Sahih Muslim: 33 SubhanAllah, 33 Alhamdulillah, 34 Allahu Akbar.
+var PHASES = [
+  { ar: "سُبْحَانَ اللَّهِ", en: "SubhanAllah", target: 33 },
+  { ar: "الْحَمْدُ لِلَّهِ", en: "Alhamdulillah", target: 33 },
+  { ar: "اللَّهُ أَكْبَرُ", en: "Allahu Akbar", target: 34 }
+];
+var FREE = { ar: "ذِكْر", en: "Free count", target: 100 };
+var CIRC = 2 * Math.PI * 58;
+
+var state = { mode: "salah", phase: 0, count: 0, free: 0, day: "", today: 0, total: 0 };
+
+function todayKey() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+
+function save() {
+  var s = JSON.stringify(state);
+  try { localStorage.setItem("tasbih", s); } catch (e) {}
+  try { if (window.creationStorage && window.creationStorage.plain) window.creationStorage.plain.setItem("tasbih", btoa(s)); } catch (e) {}
+}
+
+function load(done) {
+  function apply(raw) {
+    try { var s = JSON.parse(raw); if (s && typeof s.count === "number") state = Object.assign(state, s); } catch (e) {}
+    if (state.day !== todayKey()) { state.day = todayKey(); state.today = 0; }
+    done();
+  }
+  var local = null;
+  try { local = localStorage.getItem("tasbih"); } catch (e) {}
+  try {
+    if (window.creationStorage && window.creationStorage.plain) {
+      window.creationStorage.plain.getItem("tasbih").then(function (v) {
+        apply(v ? atob(v) : local);
+      }, function () { apply(local); });
+      return;
+    }
+  } catch (e) {}
+  apply(local);
+}
+
+function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+
+function render() {
+  var p = state.mode === "salah" ? PHASES[state.phase] : FREE;
+  var n = state.mode === "salah" ? state.count : state.free;
+  var target = p.target;
+  document.getElementById("arabic").textContent = p.ar;
+  document.getElementById("translit").textContent = p.en;
+  document.getElementById("num").textContent = n;
+  document.getElementById("of").textContent = state.mode === "salah" ? "of " + target : (n >= 100 ? Math.floor(n / 100) + " x 100" : "counting");
+  var frac = state.mode === "salah" ? Math.min(n / target, 1) : (n % 100) / 100;
+  document.getElementById("bar").style.strokeDasharray = CIRC;
+  document.getElementById("bar").style.strokeDashoffset = CIRC * (1 - frac);
+  document.getElementById("modeBtn").textContent = state.mode === "salah" ? "After salah" : "Free count";
+  document.getElementById("today").textContent = "Today " + state.today;
+  document.getElementById("total").textContent = "All " + state.total;
+  var dots = "";
+  if (state.mode === "salah") {
+    for (var i = 0; i < PHASES.length; i++) dots += '<div class="dot ' + (i < state.phase ? "done" : i === state.phase ? "now" : "") + '"></div>';
+  }
+  document.getElementById("phases").innerHTML = dots;
+}
+
+function flash() {
+  var el = document.getElementById("num");
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+}
+
+function add() {
+  if (document.getElementById("confirm").classList.contains("show")) return;
+  state.today += 1; state.total += 1;
+  if (state.mode === "free") {
+    state.free += 1;
+    if (state.free % 100 === 0) buzz([60, 60, 60]); else buzz(8);
+  } else {
+    state.count += 1;
+    if (state.count >= PHASES[state.phase].target) {
+      if (state.phase < PHASES.length - 1) { state.phase += 1; state.count = 0; buzz([40, 50, 40]); }
+      else { buzz([80, 60, 80, 60, 80]); document.getElementById("hint").textContent = "100 complete"; setTimeout(function () { state.phase = 0; state.count = 0; document.getElementById("hint").textContent = "Wheel or button to count"; save(); render(); }, 1600); }
+    } else buzz(8);
+  }
+  flash(); save(); render();
+}
+
+function undo() {
+  if (state.mode === "free") { if (state.free > 0) { state.free -= 1; state.today = Math.max(0, state.today - 1); state.total = Math.max(0, state.total - 1); } }
+  else if (state.count > 0) { state.count -= 1; state.today = Math.max(0, state.today - 1); state.total = Math.max(0, state.total - 1); }
+  else if (state.phase > 0) { state.phase -= 1; state.count = PHASES[state.phase].target - 1; state.today = Math.max(0, state.today - 1); state.total = Math.max(0, state.total - 1); }
+  save(); render();
+}
+
+function reset() {
+  if (state.mode === "free") state.free = 0; else { state.phase = 0; state.count = 0; }
+  document.getElementById("confirm").classList.remove("show");
+  save(); render();
+}
+
+// r1 hardware events
+window.addEventListener("sideClick", add);
+window.addEventListener("scrollDown", add);
+window.addEventListener("scrollUp", undo);
+// keyboard, for testing on a computer (no mouse-wheel listener, so an r1 scroll can never count twice)
+window.addEventListener("keydown", function (e) { if (e.key === " " || e.key === "ArrowDown") add(); if (e.key === "ArrowUp") undo(); });
+
+// taps (pointer events, never preventDefault on touch: it can crash creations)
+document.getElementById("ring").addEventListener("pointerup", add);
+document.getElementById("modeBtn").addEventListener("pointerup", function () { state.mode = state.mode === "salah" ? "free" : "salah"; save(); render(); });
+document.getElementById("resetBtn").addEventListener("pointerup", function () { document.getElementById("confirm").classList.add("show"); });
+document.getElementById("yesBtn").addEventListener("pointerup", reset);
+document.getElementById("noBtn").addEventListener("pointerup", function () { document.getElementById("confirm").classList.remove("show"); });
+
+load(render);
+</script>
+</body>
+</html>
