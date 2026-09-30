@@ -22,14 +22,15 @@
 <body>
 <main>
   <h1>R1 Creations</h1>
-  <p>Small apps for the Rabbit R1. To install one, open the R1's camera and point it at the QR code.</p>
+  <p>Small apps for the Rabbit R1. <strong>Do not use the R1's normal camera</strong> (double press of the side button). That camera only describes what it sees. Installs go through the creations card.</p>
 
   <div id="list"></div>
 
   <ol>
-    <li>On the R1, open the camera and scan the code.</li>
-    <li>The R1 asks to add the creation. Accept.</li>
-    <li>Open it from the creations list on the R1.</li>
+    <li>On the R1, scroll to the <strong>creations</strong> card and tap it.</li>
+    <li>Open the <strong>create</strong> tab and tap <strong>add via QR code</strong>.</li>
+    <li>Point the R1 at the code, 6 to 10 inches from the screen, with this screen's brightness turned up. Hold still for a few seconds.</li>
+    <li>Accept the install. Installed creations are at the bottom of the R1's card stack.</li>
   </ol>
 </main>
 
@@ -38,7 +39,7 @@
   // Each creation: bump "version" after an update so the R1 loads the new copy.
   var CREATIONS = [
     { folder: "tasbih", title: "Tasbih", version: 1, themeColor: "#d4b25a",
-      description: "Dhikr counter. Side button or scroll wheel counts, 33, 33, 34 after salah." }
+      description: "Dhikr counter. 33, 33, 34 after salah." }
   ];
   var base = location.origin + location.pathname.replace(/index\.html$/, "").replace(/\/?$/, "/");
   var list = document.getElementById("list");
@@ -51,7 +52,8 @@
     card.innerHTML = '<div class="qr"></div><div class="info"><h2><img alt="" src="' + c.folder + '/icon.png">' +
       c.title + '</h2><p>' + c.description + '</p><p><a href="' + url + '">Open in this browser</a></p></div>';
     list.appendChild(card);
-    new QRCode(card.querySelector(".qr"), { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+    // Same settings as rabbit's own QR tool: large, lowest error correction, so the code is as sparse as possible for the R1 camera.
+    new QRCode(card.querySelector(".qr"), { text: payload, width: 320, height: 320, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
   });
 </script>
 </body>
