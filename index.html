@@ -40,7 +40,7 @@
   var CREATIONS = [
     { folder: "tasbih", title: "Tasbih", version: 1, themeColor: "#d4b25a",
       description: "Dhikr counter. 33, 33, 34 after salah." },
-    { folder: "pager", title: "Wall St Pager", version: 1, themeColor: "#a9bd8f",
+    { folder: "pager", title: "Wall St Pager", version: 2, themeColor: "#5dff94",
       description: "SPY, TSLA, BTC, SNAP, XRP, DOGE, SPCX." }
   ];
   var base = location.origin + location.pathname.replace(/index\.html$/, "").replace(/\/?$/, "/");
@@ -48,10 +48,10 @@
   CREATIONS.forEach(function (c) {
     var url = base + c.folder + "/?v=" + c.version;
     var payload = JSON.stringify({ title: c.title, url: url, description: c.description,
-                                   iconUrl: base + c.folder + "/icon.png", themeColor: c.themeColor });
+                                   iconUrl: base + c.folder + "/icon.png?v=" + c.version, themeColor: c.themeColor });
     var card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = '<div class="qr"></div><div class="info"><h2><img alt="" src="' + c.folder + '/icon.png">' +
+    card.innerHTML = '<div class="qr"></div><div class="info"><h2><img alt="" src="' + c.folder + '/icon.png?v=' + c.version + '">' +
       c.title + '</h2><p>' + c.description + '</p><p><a href="' + url + '">Open in this browser</a></p></div>';
     list.appendChild(card);
     // Same settings as rabbit's own QR tool: large, lowest error correction, so the code is as sparse as possible for the R1 camera.
