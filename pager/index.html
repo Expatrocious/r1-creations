@@ -6,8 +6,10 @@
 <title>Wall St Pager</title>
 <style>
   :root {
-    --lcd-hi: #b9cc9f; --lcd-lo: #a2b787;   /* the green LCD */
-    --ink: #17220e; --dim: #52663f; --ghost: rgba(23, 34, 14, 0.12);
+    /* "phosphor" theme, picked 10/1: near-black screen, glowing green text */
+    --lcd-hi: #0d1d12; --lcd-lo: #08130c;
+    --ink: #5dff94; --dim: #2f9a58; --ghost: rgba(93, 255, 148, 0.3);
+    --track: rgba(93, 255, 148, 0.2); --grid: rgba(93, 255, 148, 0.04); --shade: rgba(0, 0, 0, 0.5); --rule: rgba(93, 255, 148, 0.3);
     --bezel: #161915;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -21,10 +23,10 @@
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35), inset 0 2px 10px rgba(0,0,0,0.25); }
   #lcd::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: 12px;
     background:
-      repeating-linear-gradient(0deg, rgba(23,34,14,0.045) 0 1px, transparent 1px 3px),
-      repeating-linear-gradient(90deg, rgba(23,34,14,0.035) 0 1px, transparent 1px 3px),
-      radial-gradient(ellipse at center, transparent 55%, rgba(23,34,14,0.18) 100%); }
-  .ink { text-shadow: 1px 1px 0 var(--ghost); }
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, var(--shade) 100%); }
+  .ink { text-shadow: 0 0 4px var(--ghost); }
 
   /* status bar */
   .bar { display: flex; justify-content: space-between; align-items: center; height: 19px; padding: 0 9px;
@@ -46,17 +48,17 @@
   .row { height: 31px; padding: 3px 6px 0; border-radius: 7px; }
   .row .top { display: flex; align-items: center; height: 18px; }
   .row .sym { width: 44px; font-size: 12px; font-weight: 800; letter-spacing: 0.4px; }
-  .row .px { flex: 1; text-align: right; font-size: 13px; padding: 0 6px; border-radius: 3px; transition: background 0.4s, color 0.4s; }
+  .row .px { flex: 1; text-align: right; font-size: 13px; padding: 0 6px; border-radius: 3px; }
   .badge { min-width: 56px; text-align: center; font-size: 10px; font-weight: 700; padding: 1px 0; border-radius: 9px; }
   .badge.up { background: var(--ink); color: var(--lcd-hi); }
   .badge.down { border: 1.5px solid var(--ink); padding: 0 0; }
   .badge.none { color: var(--dim); }
-  .range { position: relative; height: 3px; margin: 4px 0 0 44px; background: rgba(23,34,14,0.18); border-radius: 2px; }
+  .range { position: relative; height: 3px; margin: 4px 0 0 44px; background: var(--track); border-radius: 2px; }
   .range b { position: absolute; top: -2px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--ink); }
   .row.sel { background: var(--ink); color: var(--lcd-hi); text-shadow: none; }
   .row.sel .badge.up { background: var(--lcd-hi); color: var(--ink); }
   .row.sel .badge.down { border-color: var(--lcd-hi); }
-  .row.sel .range { background: rgba(185,204,159,0.25); }
+  .row.sel .range { background: var(--lcd-lo); opacity: 0.45; }
   .row.sel .range b { background: var(--lcd-hi); }
   .row.page .sym::after { content: "\2022"; margin-left: 2px; animation: blink 1s steps(2) infinite; }
   .tick { background: var(--ink); color: var(--lcd-hi); }
@@ -64,7 +66,7 @@
 
   /* footer */
   .foot { position: absolute; bottom: 0; left: 0; right: 0; height: 17px; display: flex; justify-content: space-between; align-items: center;
-    padding: 0 9px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; border-top: 1px solid rgba(23,34,14,0.3); }
+    padding: 0 9px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; border-top: 1px solid var(--rule); }
   .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); margin-right: 4px; vertical-align: 1px; }
   .dot.live { animation: blink 1.6s steps(2) infinite; }
   @keyframes blink { 50% { opacity: 0.15; } }
@@ -89,7 +91,7 @@
   #setup { display: none; padding: 10px 12px; font-size: 11px; line-height: 1.45; user-select: text; }
   #setup b { font-size: 11px; letter-spacing: 1px; }
   #setup input { width: 100%; margin: 8px 0; padding: 6px 8px; font-size: 12px; border: 1.5px solid var(--ink); border-radius: 6px;
-    background: rgba(255,255,255,0.25); color: var(--ink); user-select: text; }
+    background: var(--grid); color: var(--ink); user-select: text; }
   #setup .btns { display: flex; gap: 6px; }
   #setup .btn { flex: 1; text-align: center; padding: 6px 0; border: 1.5px solid var(--ink); border-radius: 14px; font-weight: 800; font-size: 10px; letter-spacing: 0.8px; }
   #setup .btn.dark { background: var(--ink); color: var(--lcd-hi); }
