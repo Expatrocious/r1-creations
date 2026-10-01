@@ -72,26 +72,34 @@
   @keyframes blink { 50% { opacity: 0.15; } }
 
   /* detail */
-  #detail { display: none; padding: 8px 12px 0; }
+  #detail { display: none; padding: 6px 12px 0; }
   .d-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
-  .d-px { font-size: 32px; font-weight: 700; line-height: 1.15; margin-top: 4px; letter-spacing: -0.5px; }
+  .d-px { font-size: 28px; font-weight: 700; line-height: 1.1; margin-top: 3px; letter-spacing: -0.5px; }
+  .d-px small { font-size: 9px; font-weight: 700; color: var(--dim); letter-spacing: 0.4px; margin-left: 6px; }
   .d-chg { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 11px; font-weight: 700; }
-  .d-range { margin-top: 12px; }
-  .d-range .range { margin: 0; height: 4px; }
-  .d-range .range b { top: -3px; width: 10px; height: 10px; margin-left: -5px; }
-  .d-range .ends { display: flex; justify-content: space-between; font-size: 9px; color: var(--dim); margin-top: 5px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-top: 10px; }
-  .grid div { font-size: 9px; color: var(--dim); font-weight: 700; letter-spacing: 0.6px; }
-  .grid div span { display: block; font-size: 12px; color: var(--ink); letter-spacing: 0; }
-  .alert { margin-top: 8px; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 3px; border-radius: 4px;
-    background: var(--ink); color: var(--lcd-hi); animation: blink 1.2s steps(2) infinite; }
-  .hint { position: absolute; bottom: 21px; left: 12px; right: 12px; font-size: 8.5px; color: var(--dim); font-weight: 700; letter-spacing: 0.8px; text-align: center; }
+  .chips { display: flex; gap: 4px; margin-top: 7px; }
+  .chip { flex: 1; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 0.5px; padding: 2px 0; border: 1px solid var(--track); border-radius: 8px; color: var(--dim); }
+  .chip.on { background: var(--ink); color: var(--lcd-hi); border-color: var(--ink); text-shadow: none; }
+  .chart { position: relative; height: 64px; margin-top: 7px; }
+  .chart { touch-action: none; }   /* lets a finger drag along the chart without scrolling the page */
+  .chart svg { display: block; width: 100%; height: 64px; overflow: visible; }
+  .chart .msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.6px; color: var(--dim); padding: 0 8px; border: 1px dashed var(--track); border-radius: 6px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px 8px; margin-top: 6px; }
+  .stats div { font-size: 8px; color: var(--dim); font-weight: 700; letter-spacing: 0.6px; }
+  .stats div span { display: block; font-size: 11px; color: var(--ink); letter-spacing: 0; }
+  .alert { position: absolute; bottom: 21px; left: 12px; right: 12px; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 2px; border-radius: 4px;
+    background: var(--ink); color: var(--lcd-hi); text-shadow: none; animation: blink 1.2s steps(2) infinite; }
+  .hint { position: absolute; bottom: 22px; left: 12px; right: 12px; font-size: 8px; color: var(--dim); font-weight: 700; letter-spacing: 0.8px; text-align: center; }
 
   /* key setup */
-  #setup { display: none; padding: 10px 12px; font-size: 11px; line-height: 1.45; user-select: text; }
+  #setup { display: none; padding: 8px 12px; font-size: 10.5px; line-height: 1.4; user-select: text; }
   #setup b { font-size: 11px; letter-spacing: 1px; }
-  #setup input { width: 100%; margin: 8px 0; padding: 6px 8px; font-size: 12px; border: 1.5px solid var(--ink); border-radius: 6px;
+  #setup label { display: block; margin-top: 7px; font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; color: var(--dim); }
+  #setup input { width: 100%; margin: 3px 0 0; padding: 5px 8px; font-size: 12px; border: 1.5px solid var(--ink); border-radius: 6px;
     background: var(--grid); color: var(--ink); user-select: text; }
+  #setup input::placeholder { color: var(--dim); }
+  #setup .btns { margin-top: 9px; }
   #setup .btns { display: flex; gap: 6px; }
   #setup .btn { flex: 1; text-align: center; padding: 6px 0; border: 1.5px solid var(--ink); border-radius: 14px; font-weight: 800; font-size: 10px; letter-spacing: 0.8px; }
   #setup .btn.dark { background: var(--ink); color: var(--lcd-hi); }
@@ -108,21 +116,28 @@
   <div id="rows"></div>
   <div id="detail"></div>
   <div id="setup">
-    <b>STOCK PRICES NEED A FREE KEY</b><br>
-    Get one at finnhub.io, then type it here once. It stays on this r1 only.
+    <b>FREE KEYS FOR STOCKS</b><br>
+    Typed once, kept on this r1 only. Leave a box empty to keep what is saved.
+    <label for="keyIn">FINNHUB.IO · LIVE PRICES</label>
     <input id="keyIn" class="mono" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="finnhub key">
-    <div class="btns"><span class="btn dark" id="saveKey">SAVE</span><span class="btn" id="skipKey">CRYPTO ONLY</span></div>
+    <label for="tdIn">TWELVEDATA.COM · CHARTS</label>
+    <input id="tdIn" class="mono" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="twelve data key">
+    <div class="btns"><span class="btn dark" id="saveKey">SAVE</span><span class="btn" id="skipKey">LATER</span></div>
     <div id="setupMsg"></div>
   </div>
   <div class="foot"><span id="mkt"><i class="dot"></i>LOADING</span><span class="mono" id="upd">--</span></div>
 </div>
 
 <script>
-// Wall St Pager for the Rabbit R1. Built 10/1/2026, retro modern redesign the same day.
-// Stocks: Finnhub (free key, entered once on the r1 and kept in its storage, never in this page).
-// Crypto: CoinGecko's free public API, no key.
-// Controls: scroll wheel moves the highlight, side button opens or closes the detail screen,
-// hold the side button to refresh now, tap a row to open it, tap WALL ST to change the key.
+// Wall St Pager for the Rabbit R1. Built 10/1/2026, retro modern redesign and price charts the same day.
+// Live stock prices: Finnhub. Stock charts: Twelve Data (Finnhub's free plan has no history).
+// Both are free keys typed once on the r1 and kept in its storage, never in this page.
+// Crypto prices and charts: CoinGecko's free public API, no key.
+// Controls: on the list, the scroll wheel moves the highlight and the side button opens the detail screen.
+// On the detail screen, the scroll wheel changes the time range (1D 1W 1M 3M 1Y) and the side button goes back.
+// Tap the chart to scrub: the wheel then steps day by day (bar by bar on 1D and 1W) showing that exact price,
+// a finger drag jumps along the chart, and the side button or a tap off the chart ends it.
+// Hold the side button to refresh now, tap a row to open it, tap WALL ST to change the keys.
 var TICKERS = [
   { sym: "SPY",  src: "fh",   id: "SPY",      name: "S&P 500 · SPY" },
   { sym: "TSLA", src: "fh",   id: "TSLA",     name: "TESLA" },
@@ -137,6 +152,14 @@ var REFRESH_MS = 60000;   // once a minute (Finnhub free allows 60 calls a minut
 
 var data = {}, sel = 0, view = "list", lastUpdate = 0, paged = {}, apiKey = "", stockError = "", ticks = {}, online = true;
 
+// price history for the charts
+var RANGES = ["1D", "1W", "1M", "3M", "1Y"];
+var RANGE_NAMES = { "1D": "1 DAY", "1W": "1 WEEK", "1M": "1 MONTH", "3M": "3 MONTHS", "1Y": "1 YEAR" };
+var TTL = { "1D": 5 * 60e3, "1W": 30 * 60e3, "1M": 6 * 3600e3, "3M": 6 * 3600e3, "1Y": 6 * 3600e3, "DAILY": 6 * 3600e3 };
+var rangeIdx = 2;            // opens on 1 MONTH
+var tdKey = "", hist = {}, histErr = {}, histErrAt = {}, histLoading = {}, histTimer = null;
+var cursor = null;           // scrub cursor: null when off, Infinity for NOW, else the time of the picked point
+
 // ---------- storage: the r1's creation storage when available, else localStorage ----------
 function store(kind) { try { return window.creationStorage && window.creationStorage[kind]; } catch (e) { return null; } }
 function getItem(key, kind) {
@@ -149,7 +172,9 @@ function setItem(key, value, kind) {
   var s = store(kind || "plain");
   if (s) { try { s.setItem(key, btoa(value)); } catch (e) {} }
 }
-function save() { setItem("pager", JSON.stringify({ data: data, lastUpdate: lastUpdate, paged: paged })); }
+function save() { setItem("pager", JSON.stringify({ data: data, lastUpdate: lastUpdate, paged: paged, rangeIdx: rangeIdx })); }
+// chart history can be large, so it lives in localStorage only
+function saveHist() { try { localStorage.setItem("pagerHist", JSON.stringify(hist)); } catch (e) {} }
 
 // ---------- formatting ----------
 function fmtPx(n) {
@@ -229,6 +254,149 @@ function fetchCrypto() {
     });
 }
 
+// ---------- history ----------
+function coinFetch(t, query) {
+  return fetch("https://api.coingecko.com/api/v3/coins/" + t.id + "/market_chart?vs_currency=usd&" + query).then(function (res) {
+    if (res.status === 429) throw new Error("BUSY");
+    if (!res.ok) throw new Error("OFFLINE");
+    return res.json();
+  }).then(function (j) { return (j.prices || []).map(function (p) { return [p[0], p[1]]; }); });
+}
+// CoinGecko's free API is rate limited, so 1W, 1M and 3M share one 90-day hourly download
+function coinHistory(t, r) {
+  if (r === "1D") return coinFetch(t, "days=1");
+  if (r === "1Y") return coinFetch(t, "days=365&interval=daily");
+  var k = t.sym + "|H90", c = hist[k], cut = Date.now() - { "1W": 7, "1M": 30, "3M": 90 }[r] * 864e5;
+  var p = c && Date.now() - c.t < TTL["1W"] ? Promise.resolve(c.pts)
+    : coinFetch(t, "days=90").then(function (pts) { hist[k] = { t: Date.now(), pts: pts }; return pts; });
+  return p.then(function (pts) { return pts.filter(function (x) { return x[0] >= cut; }); });
+}
+
+function tdSeries(symbol, interval, size) {
+  var url = "https://api.twelvedata.com/time_series?symbol=" + encodeURIComponent(symbol) + "&interval=" + interval +
+            "&outputsize=" + size + "&apikey=" + encodeURIComponent(tdKey);
+  return fetch(url).then(function (res) { return res.json(); }).then(function (j) {
+    if (!j || j.status === "error") {
+      var c = j && j.code;
+      throw new Error(c === 401 ? "TDKEY" : c === 403 ? "NOPLAN" : c === 429 ? "BUSY" : "NODATA");
+    }
+    // newest first from Twelve Data; keep [time, close, "YYYY-MM-DD..."] oldest first
+    return (j.values || []).map(function (v) { return [Date.parse(v.datetime.replace(" ", "T")), parseFloat(v.close), v.datetime]; }).reverse();
+  });
+}
+
+function dailyFor(t) {
+  var k = t.sym + "|DAILY", c = hist[k];
+  if (c && Date.now() - c.t < TTL.DAILY) return Promise.resolve(c.pts);
+  return tdSeries(t.id, "1day", 260).then(function (pts) { hist[k] = { t: Date.now(), pts: pts }; return pts; });
+}
+
+function lastDayOnly(pts) {
+  if (!pts.length) return pts;
+  var day = String(pts[pts.length - 1][2]).slice(0, 10);
+  return pts.filter(function (p) { return String(p[2]).slice(0, 10) === day; });
+}
+
+// fetch one ticker's history for one range unless a fresh copy is cached; re-renders when it lands
+function loadHistory(t, r) {
+  var k = t.sym + "|" + r, c = hist[k];
+  if ((c && Date.now() - c.t < TTL[r]) || histLoading[k]) return;
+  if (t.src === "fh" && !tdKey) { histErr[k] = "NEEDKEY"; return; }
+  if (histErr[k] && Date.now() - (histErrAt[k] || 0) < 60000) return;   // after a failure, wait a minute (a hold retries now)
+  histLoading[k] = true; delete histErr[k];
+  var p;
+  if (t.src === "coin") p = coinHistory(t, r);
+  else if (r === "1D") p = tdSeries(t.id, "5min", 90).then(lastDayOnly);
+  else if (r === "1W") p = tdSeries(t.id, "1h", 40);
+  else p = dailyFor(t).then(function (pts) { return pts.slice(-{ "1M": 22, "3M": 66, "1Y": 260 }[r]); });
+  p.then(function (pts) { hist[k] = { t: Date.now(), pts: pts }; saveHist(); },
+         function (e) { histErr[k] = (e && e.message) || "OFFLINE"; histErrAt[k] = Date.now(); })
+   .then(function () { histLoading[k] = false; if (view === "detail") render(); });
+}
+
+// the calendar day a point belongs to: New York days for stocks, local days for crypto
+function dayKey(p, t) {
+  if (t.src !== "fh") return new Date(p[0]).toDateString();
+  if (p[2]) return String(p[2]).slice(0, 10);
+  try { return new Date(p[0]).toLocaleDateString("en-CA", { timeZone: "America/New_York" }); } catch (e) { return ""; }
+}
+function isDaily(r) { return r === "1M" || r === "3M" || r === "1Y"; }
+
+// one stop per notch of the wheel: each day's close for 1M, 3M and 1Y, every point for 1D and 1W.
+// the live price takes over today's stop, so the last stop is always NOW.
+function scrubPoints(pts, t, r) {
+  var out = [];
+  for (var i = 0; i < pts.length; i++) {
+    var last = out[out.length - 1];
+    if (isDaily(r) && last && dayKey(last.p, t) === dayKey(pts[i], t)) out[out.length - 1] = { i: i, p: pts[i] };
+    else out.push({ i: i, p: pts[i] });
+  }
+  return out;
+}
+
+function pointLabel(p, t, r) {
+  if (p.live) return "NOW";
+  if (t.src === "fh" && p[2]) {           // Twelve Data times are New York exchange time
+    var s = String(p[2]), d = new Date(s.slice(0, 10) + "T12:00:00");
+    var md = d.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
+    if (isDaily(r) || s.length <= 10) return md + ", " + s.slice(0, 4);
+    var hh = +s.slice(11, 13), mm = s.slice(14, 16);
+    return md + " " + ((hh + 11) % 12 + 1) + ":" + mm + (hh < 12 ? " AM" : " PM") + " ET";
+  }
+  var dt = new Date(p[0]), md2 = dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
+  return isDaily(r) ? md2 + ", " + dt.getFullYear() : md2 + " " + dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toUpperCase();
+}
+
+// the chart's points with the live price on the end, plus its scrub stops; null until there is a line to draw
+function series(t, r) {
+  var q = data[t.sym] || {}, h = hist[t.sym + "|" + r];
+  if (!h || !h.pts || !h.pts.length) return null;
+  var pts = h.pts.slice();
+  if (q.px != null) { var lp = [Date.now(), q.px]; lp.live = true; pts.push(lp); }
+  return pts.length > 1 ? { pts: pts, sp: scrubPoints(pts, t, r) } : null;
+}
+// the cursor remembers a time, not a position, so new data arriving does not move it
+function cursorIdx(sp) {
+  if (cursor === Infinity) return sp.length - 1;
+  var best = 0;
+  for (var j = 1; j < sp.length; j++) if (Math.abs(sp[j].p[0] - cursor) < Math.abs(sp[best].p[0] - cursor)) best = j;
+  return best;
+}
+function setCursor(stop) { cursor = stop.p.live ? Infinity : stop.p[0]; }
+
+// at = index into pts of the scrub cursor, or null
+function chartSvg(pts, at) {
+  var w = 204, h = 64, n = pts.length, step = Math.max(1, Math.ceil(n / 240)), s = [];
+  for (var i = 0; i < n; i += step) s.push(i);
+  if (s[s.length - 1] !== n - 1) s.push(n - 1);
+  if (at != null && s.indexOf(at) < 0) { s.push(at); s.sort(function (a, b) { return a - b; }); }   // keep the picked point on the line
+  var vals = s.map(function (i) { return pts[i][1]; });
+  var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  if (hi === lo) { hi += 1; lo -= 1; }
+  function X(i) { return (n < 2 ? w : i / (n - 1) * w).toFixed(1); }
+  function Y(v) { return (h - 4 - (v - lo) / (hi - lo) * (h - 8)).toFixed(1); }
+  var line = s.map(function (i, j) { return (j ? "L" : "M") + X(i) + " " + Y(pts[i][1]); }).join(" ");
+  var base = Y(pts[0][1]), cur = "";
+  if (at != null) {   // vertical line and ring where the cursor sits
+    cur = '<line x1="' + X(at) + '" x2="' + X(at) + '" y1="0" y2="' + h + '" style="stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 2"/>' +
+          '<circle cx="' + X(at) + '" cy="' + Y(pts[at][1]) + '" r="3.6" style="fill: var(--lcd-hi); stroke: var(--ink); stroke-width: 1.6"/>';
+  }
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+    '<path d="' + line + ' L' + w + ' ' + h + ' L0 ' + h + ' Z" style="fill: var(--ink); fill-opacity: 0.12"/>' +
+    '<line x1="0" x2="' + w + '" y1="' + base + '" y2="' + base + '" style="stroke: var(--dim); stroke-width: 1; stroke-dasharray: 2 3"/>' +
+    '<path d="' + line + '" style="fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round"/>' +
+    '<circle cx="' + X(n - 1) + '" cy="' + Y(pts[n - 1][1]) + '" r="2.6" style="fill: var(--ink)"/>' + cur + '</svg>';
+}
+
+var CHART_MSG = {
+  NEEDKEY: "CHARTS NEED A FREE TWELVE DATA KEY. TAP WALL ST.",
+  TDKEY: "TWELVE DATA REJECTED THE KEY. TAP WALL ST.",
+  NOPLAN: "NOT IN TWELVE DATA'S FREE PLAN.",
+  NODATA: "NO CHART DATA FOR THIS ONE YET.",
+  BUSY: "DATA LIMIT HIT. TRY AGAIN IN A MINUTE.",
+  OFFLINE: "CHART OFFLINE. HOLD THE BUTTON TO RETRY."
+};
+
 function refresh() {
   document.getElementById("upd").textContent = "SYNC";
   return Promise.all([fetchStocks().catch(function () {}), fetchCrypto().catch(function () { return false; })]).then(function (r) {
@@ -289,55 +457,141 @@ function render() {
     });
     setTimeout(function () { Array.prototype.forEach.call(rows.querySelectorAll(".tick"), function (el) { el.classList.remove("tick"); }); }, 700);
   } else if (view === "detail") {
-    var t = TICKERS[sel], q = data[t.sym] || {};
-    var html = '<div class="d-head"><span>' + t.name + '</span><span>' + (q.crypto ? "24H" : "TODAY") + '</span></div>' +
-      '<div class="d-px mono">' + fmtPx(q.px) + '</div>' +
-      '<div class="d-chg">' + badge(q.pct) + '<span class="mono">' + fmtChg(q.chg, q.px) + '</span></div>' +
-      '<div class="d-range">' + rangeBar(q) + '<div class="ends mono"><span>L ' + fmtPx(q.lo) + '</span><span>H ' + fmtPx(q.hi) + '</span></div></div>' +
-      '<div class="grid mono">' +
-        (q.open ? '<div>OPEN<span>' + fmtPx(q.open) + '</span></div>' : "") +
-        (q.prev ? '<div>PREV CLOSE<span>' + fmtPx(q.prev) + '</span></div>' : "") +
-        '<div>AS OF<span>' + (q.time || "--") + '</span></div>' +
-        (t.sym === "SPY" ? '<div>S&amp;P 500<span>~' + fmtPx(q.px * 10) + '</span></div>' : "") +
-      '</div>' +
-      (paged[t.sym + " " + new Date().toDateString()]
-        ? '<div class="alert">PAGE · MOVED ' + Math.abs(q.pct || 0).toFixed(1) + '%</div>'
-        : '<div class="hint">BUTTON: BACK · HOLD: REFRESH</div>');
+    var t = TICKERS[sel], q = data[t.sym] || {}, r = RANGES[rangeIdx];
+    // fetch only the range the wheel settles on, not every range it passes
+    clearTimeout(histTimer); histTimer = setTimeout(function () { loadHistory(t, r); }, 350);
+    var k = t.sym + "|" + r, s = series(t, r), pts = s && s.pts;   // the line ends at the live price
+    if (!s) cursor = null;
+
+    // change, low, high for the selected range
+    var pct = null, chg = null, lo = null, hi = null, start = null, startLabel = "START";
+    if (r === "1D") {
+      pct = q.pct; chg = q.chg; lo = q.lo; hi = q.hi;
+      if (q.open) { start = q.open; startLabel = "OPEN"; } else if (pts) start = pts[0][1];
+    }
+    if (pts) {
+      var vals = pts.map(function (p) { return p[1]; });
+      if (r !== "1D" || lo == null) { lo = Math.min.apply(null, vals); hi = Math.max.apply(null, vals); }
+      if (r !== "1D") { start = pts[0][1]; chg = pts[pts.length - 1][1] - start; pct = chg / start * 100; }
+    }
+
+    // scrubbing: the header, change and stats describe the picked point instead of now
+    var ci = cursor != null ? cursorIdx(s.sp) : -1, cp = ci >= 0 ? s.sp[ci] : null;
+    var headL = t.name, headR = r === "1D" && q.crypto ? "24 HOURS" : RANGE_NAMES[r], px = q.px, stats;
+    if (cp) {
+      var v = cp.p[1], base = r === "1D" && q.prev ? q.prev : pts[0][1], prev = ci > 0 ? s.sp[ci - 1].p[1] : null;
+      headL = t.sym; headR = pointLabel(cp.p, t, r); px = v;
+      chg = v - base; pct = chg / base * 100;
+      stats = [[isDaily(r) ? "DAY MOVE" : "MOVE", prev ? fmtPct((v - prev) / prev * 100) : "--"],
+               ["TO NOW", q.px != null ? fmtPct((q.px - v) / v * 100) : "--"], ["NOW", fmtPx(q.px)]];
+    } else {
+      stats = [["LOW", fmtPx(lo)], ["HIGH", fmtPx(hi)], [startLabel, fmtPx(start)]];
+    }
+
+    var chart = s ? chartSvg(pts, cp ? cp.i : null)
+      : '<div class="msg">' + (histErr[k] ? CHART_MSG[histErr[k]] || CHART_MSG.OFFLINE : "LOADING " + RANGE_NAMES[r] + "...") + '</div>';
+    var html = '<div class="d-head"><span>' + headL + '</span><span>' + headR + '</span></div>' +
+      '<div class="d-px mono">' + fmtPx(px) + (t.sym === "SPY" && px ? '<small>S&amp;P ~' + fmtPx(px * 10) + '</small>' : "") + '</div>' +
+      '<div class="d-chg">' + badge(pct) + '<span class="mono">' + fmtChg(chg, px) + '</span></div>' +
+      '<div class="chips">' + RANGES.map(function (x, i) { return '<span class="chip' + (i === rangeIdx ? " on" : "") + '" data-r="' + i + '">' + x + '</span>'; }).join("") + '</div>' +
+      '<div class="chart' + (cp ? " scrub" : "") + '">' + chart + '</div>' +
+      '<div class="stats mono">' + stats.map(function (x) { return '<div>' + x[0] + '<span>' + x[1] + '</span></div>'; }).join("") + '</div>' +
+      (cp ? '<div class="hint">WHEEL OR DRAG: MOVE · BUTTON: DONE</div>'
+        : paged[t.sym + " " + new Date().toDateString()]
+        ? '<div class="alert">PAGE · MOVED ' + Math.abs(q.pct || 0).toFixed(1) + '% TODAY</div>'
+        : '<div class="hint">WHEEL: RANGE · TAP CHART: EXACT PRICE</div>');
     detail.innerHTML = html;
+    Array.prototype.forEach.call(detail.querySelectorAll(".chip"), function (el) {
+      el.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+      el.addEventListener("pointerup", function (e) { e.stopPropagation(); rangeIdx = +el.getAttribute("data-r"); cursor = null; save(); render(); });
+    });
   }
 }
 
 function openSetup() {
   view = "setup"; render();
-  var input = document.getElementById("keyIn");
-  input.value = "";
-  setTimeout(function () { input.focus(); }, 50);   // focusing opens the r1 keyboard
+  var fh = document.getElementById("keyIn"), td = document.getElementById("tdIn");
+  fh.value = ""; td.value = "";
+  fh.placeholder = apiKey ? "saved ✓" : "finnhub key";
+  td.placeholder = tdKey ? "saved ✓" : "twelve data key";
+  setTimeout(function () { (apiKey && !tdKey ? td : fh).focus(); }, 50);   // focusing opens the r1 keyboard
 }
 
 function saveKey() {
-  var k = document.getElementById("keyIn").value.trim();
-  if (!k) { document.getElementById("setupMsg").textContent = "Type the key first."; return; }
-  apiKey = k; setItem("finnhubKey", k, "secure");
-  document.getElementById("keyIn").blur();
+  var fh = document.getElementById("keyIn").value.trim(), td = document.getElementById("tdIn").value.trim();
+  if (!fh && !td && !apiKey) { document.getElementById("setupMsg").textContent = "Type the Finnhub key first."; return; }
+  if (fh) { apiKey = fh; setItem("finnhubKey", fh, "secure"); }
+  if (td) {
+    tdKey = td; setItem("tdKey", td, "secure");
+    Object.keys(histErr).forEach(function (k) { delete histErr[k]; });   // retry charts with the new key
+  }
+  document.getElementById("keyIn").blur(); document.getElementById("tdIn").blur();
   document.getElementById("setupMsg").textContent = "";
   view = "list"; render(); refresh();
 }
 
 // ---------- controls ----------
-window.addEventListener("scrollDown", function () { if (view !== "setup") { sel = (sel + 1) % TICKERS.length; render(); } });
-window.addEventListener("scrollUp", function () { if (view !== "setup") { sel = (sel - 1 + TICKERS.length) % TICKERS.length; render(); } });
+// on the list the wheel moves between tickers; on the detail screen it changes the time range,
+// or, while scrubbing, steps the cursor one day (1M 3M 1Y) or one bar (1D 1W). Up is back in time.
+var wheelAt = 0, wheelRun = 0;
+function wheel(step) {
+  if (view === "list") { sel = (sel + step + TICKERS.length) % TICKERS.length; render(); }
+  else if (view === "detail" && cursor != null) {
+    var s = series(TICKERS[sel], RANGES[rangeIdx]); if (!s) return;
+    // single notches move one stop; a long fast roll speeds up so a year is not 250 notches
+    wheelRun = Date.now() - wheelAt < 150 ? wheelRun + 1 : 0; wheelAt = Date.now();
+    var j = cursorIdx(s.sp) + step * (wheelRun > 12 ? 5 : wheelRun > 5 ? 2 : 1);
+    setCursor(s.sp[Math.max(0, Math.min(s.sp.length - 1, j))]); render();
+  }
+  else if (view === "detail") { rangeIdx = (rangeIdx + step + RANGES.length) % RANGES.length; save(); render(); }
+}
+window.addEventListener("scrollDown", function () { wheel(1); });
+window.addEventListener("scrollUp", function () { wheel(-1); });
 var lastLong = 0;
 window.addEventListener("sideClick", function () {
   if (Date.now() - lastLong < 1000 || view === "setup") return;
-  view = view === "detail" ? "list" : "detail"; render();
+  if (view === "detail" && cursor != null) { cursor = null; render(); return; }   // done scrubbing
+  cursor = null; view = view === "detail" ? "list" : "detail"; render();
 });
-window.addEventListener("longPressStart", function () { lastLong = Date.now(); if (view !== "setup") refresh(); });
+window.addEventListener("longPressStart", function () {
+  lastLong = Date.now();
+  if (view === "setup") return;
+  if (view === "detail") {   // a hold on the detail screen also re-fetches that chart
+    var k = TICKERS[sel].sym + "|" + RANGES[rangeIdx];
+    delete hist[k]; delete histErr[k];
+  }
+  refresh();
+});
 window.addEventListener("longPressEnd", function () { lastLong = Date.now(); });
-document.getElementById("detail").addEventListener("pointerup", function () { view = "list"; render(); });
+
+// touching the chart puts the cursor under the finger; dragging moves it
+var detailEl = document.getElementById("detail"), dragId = null;
+function scrubAt(x) {
+  var s = series(TICKERS[sel], RANGES[rangeIdx]), el = detailEl.querySelector(".chart");
+  if (!s || !el) return;
+  var b = el.getBoundingClientRect(), target = Math.max(0, Math.min(1, (x - b.left) / b.width)) * (s.pts.length - 1), best = 0;
+  for (var j = 1; j < s.sp.length; j++) if (Math.abs(s.sp[j].i - target) < Math.abs(s.sp[best].i - target)) best = j;
+  var was = cursor; setCursor(s.sp[best]);
+  if (cursor !== was) render();
+}
+detailEl.addEventListener("pointerdown", function (e) {
+  if (!e.target.closest || !e.target.closest(".chart") || !series(TICKERS[sel], RANGES[rangeIdx])) return;
+  dragId = e.pointerId;
+  try { detailEl.setPointerCapture(e.pointerId); } catch (x) {}   // the chart is redrawn while dragging, so capture on its parent
+  scrubAt(e.clientX);
+});
+detailEl.addEventListener("pointermove", function (e) { if (e.pointerId === dragId) scrubAt(e.clientX); });
+detailEl.addEventListener("pointercancel", function () { dragId = null; });
+detailEl.addEventListener("pointerup", function () {
+  if (dragId != null) { dragId = null; return; }             // finished picking a point
+  if (cursor != null) { cursor = null; render(); return; }   // a tap off the chart ends scrubbing
+  view = "list"; render();
+});
 document.getElementById("title").addEventListener("pointerup", openSetup);
 document.getElementById("saveKey").addEventListener("pointerup", saveKey);
 document.getElementById("skipKey").addEventListener("pointerup", function () { document.getElementById("keyIn").blur(); view = "list"; render(); });
-document.getElementById("keyIn").addEventListener("keydown", function (e) { if (e.key === "Enter") saveKey(); });
+document.getElementById("keyIn").addEventListener("keydown", function (e) { if (e.key === "Enter") document.getElementById("tdIn").focus(); });
+document.getElementById("tdIn").addEventListener("keydown", function (e) { if (e.key === "Enter") saveKey(); });
 // arrow keys, for testing on a computer (ignored while typing the key)
 window.addEventListener("keydown", function (e) {
   if (view === "setup") return;
@@ -353,9 +607,14 @@ function stopTimer() { clearInterval(timer); timer = null; }
 document.addEventListener("visibilitychange", function () { if (document.hidden) stopTimer(); else { refresh(); startTimer(); } });
 setInterval(render, 30000);   // keep the clock honest
 
-Promise.all([getItem("pager"), getItem("finnhubKey", "secure")]).then(function (v) {
-  try { var s = JSON.parse(v[0] || "null"); if (s) { data = s.data || {}; lastUpdate = s.lastUpdate || 0; paged = s.paged || {}; } } catch (e) {}
+try { hist = JSON.parse(localStorage.getItem("pagerHist") || "{}") || {}; } catch (e) { hist = {}; }
+Promise.all([getItem("pager"), getItem("finnhubKey", "secure"), getItem("tdKey", "secure")]).then(function (v) {
+  try {
+    var s = JSON.parse(v[0] || "null");
+    if (s) { data = s.data || {}; lastUpdate = s.lastUpdate || 0; paged = s.paged || {}; if (s.rangeIdx != null) rangeIdx = s.rangeIdx; }
+  } catch (e) {}
   apiKey = v[1] || "";
+  tdKey = v[2] || "";
   if (!apiKey) view = "setup";
   render(); refresh(); startTimer();
 });
