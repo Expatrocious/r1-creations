@@ -5,77 +5,135 @@
 <meta name="viewport" content="width=240, height=282, initial-scale=1, user-scalable=no">
 <title>Wall St Pager</title>
 <style>
+  :root {
+    --lcd-hi: #b9cc9f; --lcd-lo: #a2b787;   /* the green LCD */
+    --ink: #17220e; --dim: #52663f; --ghost: rgba(23, 34, 14, 0.12);
+    --bezel: #161915;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { width: 240px; height: 282px; overflow: hidden; background: #0e0e10; user-select: none; }
-  body { font-family: "Droid Sans Mono", "Roboto Mono", Menlo, Consolas, monospace; }
+  html, body { width: 240px; height: 282px; overflow: hidden; background: var(--bezel); user-select: none; }
+  body { font-family: "Roboto", "Helvetica Neue", Arial, sans-serif; color: var(--ink); }
+  .mono { font-family: "Droid Sans Mono", "Roboto Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
 
-  /* the pager body and its LCD */
-  #lcd { position: absolute; left: 6px; top: 6px; width: 228px; height: 270px; border-radius: 10px;
-    background: #a9bd8f; color: #1c2a12; box-shadow: inset 0 0 0 2px #7f9466, inset 0 0 18px rgba(0,0,0,0.25); overflow: hidden; }
-  .bar { display: flex; justify-content: space-between; align-items: center; height: 22px; padding: 0 8px;
-    font-size: 11px; font-weight: 700; border-bottom: 2px solid #1c2a12; letter-spacing: 0.5px; }
-  .rows { padding: 2px 0; }
-  .row { display: flex; align-items: center; height: 29px; padding: 0 8px; font-size: 13px; }
-  .row .sym { width: 46px; font-weight: 700; }
-  .row .px { flex: 1; text-align: right; padding-right: 8px; font-variant-numeric: tabular-nums; }
-  .row .ch { width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
-  .row.sel { background: #1c2a12; color: #a9bd8f; }
-  .row.page .sym::after { content: "!"; margin-left: 2px; }
-  .foot { position: absolute; bottom: 0; left: 0; right: 0; height: 20px; border-top: 2px solid #1c2a12;
-    display: flex; justify-content: space-between; align-items: center; padding: 0 8px; font-size: 10px; }
+  /* device and screen */
+  #lcd { position: absolute; inset: 4px; border-radius: 12px; overflow: hidden;
+    background: linear-gradient(160deg, var(--lcd-hi), var(--lcd-lo));
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35), inset 0 2px 10px rgba(0,0,0,0.25); }
+  #lcd::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: 12px;
+    background:
+      repeating-linear-gradient(0deg, rgba(23,34,14,0.045) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(23,34,14,0.035) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, rgba(23,34,14,0.18) 100%); }
+  .ink { text-shadow: 1px 1px 0 var(--ghost); }
 
-  #detail { display: none; padding: 10px 10px 0; font-size: 12px; line-height: 1.55; }
-  #detail .big { font-size: 26px; font-weight: 700; line-height: 1.2; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
-  #detail .name { font-size: 11px; font-weight: 700; }
-  #detail .kv { display: flex; justify-content: space-between; }
+  /* status bar */
+  .bar { display: flex; justify-content: space-between; align-items: center; height: 19px; padding: 0 9px;
+    font-size: 10px; font-weight: 800; letter-spacing: 1.2px; }
+  .brand { display: flex; align-items: center; gap: 5px; }
+  .sig { display: inline-flex; align-items: flex-end; gap: 1px; height: 8px; }
+  .sig i { display: block; width: 2px; background: var(--ink); }
+  .sig i:nth-child(1) { height: 3px; } .sig i:nth-child(2) { height: 5px; } .sig i:nth-child(3) { height: 7px; } .sig i:nth-child(4) { height: 8px; }
+  .sig.off i:nth-child(n+3) { opacity: 0.2; }
 
-  #setup { display: none; padding: 8px 10px; font-size: 11px; line-height: 1.45; user-select: text; }
-  #setup b { font-size: 12px; }
-  #setup input { width: 100%; margin: 6px 0; padding: 5px 6px; font: inherit; font-size: 12px; border: 2px solid #1c2a12;
-    background: #c4d4ad; color: #1c2a12; border-radius: 4px; user-select: text; }
+  /* ticker tape */
+  .tape { height: 16px; background: var(--ink); color: var(--lcd-hi); overflow: hidden; white-space: nowrap;
+    font-size: 10px; line-height: 16px; letter-spacing: 0.4px; }
+  .tape span { display: inline-block; padding-left: 100%; animation: tape 32s linear infinite; will-change: transform; }
+  @keyframes tape { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+  /* list */
+  #rows { padding: 3px 5px 0; }
+  .row { height: 31px; padding: 3px 6px 0; border-radius: 7px; }
+  .row .top { display: flex; align-items: center; height: 18px; }
+  .row .sym { width: 44px; font-size: 12px; font-weight: 800; letter-spacing: 0.4px; }
+  .row .px { flex: 1; text-align: right; font-size: 13px; padding: 0 6px; border-radius: 3px; transition: background 0.4s, color 0.4s; }
+  .badge { min-width: 56px; text-align: center; font-size: 10px; font-weight: 700; padding: 1px 0; border-radius: 9px; }
+  .badge.up { background: var(--ink); color: var(--lcd-hi); }
+  .badge.down { border: 1.5px solid var(--ink); padding: 0 0; }
+  .badge.none { color: var(--dim); }
+  .range { position: relative; height: 3px; margin: 4px 0 0 44px; background: rgba(23,34,14,0.18); border-radius: 2px; }
+  .range b { position: absolute; top: -2px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--ink); }
+  .row.sel { background: var(--ink); color: var(--lcd-hi); text-shadow: none; }
+  .row.sel .badge.up { background: var(--lcd-hi); color: var(--ink); }
+  .row.sel .badge.down { border-color: var(--lcd-hi); }
+  .row.sel .range { background: rgba(185,204,159,0.25); }
+  .row.sel .range b { background: var(--lcd-hi); }
+  .row.page .sym::after { content: "\2022"; margin-left: 2px; animation: blink 1s steps(2) infinite; }
+  .tick { background: var(--ink); color: var(--lcd-hi); }
+  .row.sel .tick { background: var(--lcd-hi); color: var(--ink); }
+
+  /* footer */
+  .foot { position: absolute; bottom: 0; left: 0; right: 0; height: 17px; display: flex; justify-content: space-between; align-items: center;
+    padding: 0 9px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; border-top: 1px solid rgba(23,34,14,0.3); }
+  .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); margin-right: 4px; vertical-align: 1px; }
+  .dot.live { animation: blink 1.6s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.15; } }
+
+  /* detail */
+  #detail { display: none; padding: 8px 12px 0; }
+  .d-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+  .d-px { font-size: 32px; font-weight: 700; line-height: 1.15; margin-top: 4px; letter-spacing: -0.5px; }
+  .d-chg { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 11px; font-weight: 700; }
+  .d-range { margin-top: 12px; }
+  .d-range .range { margin: 0; height: 4px; }
+  .d-range .range b { top: -3px; width: 10px; height: 10px; margin-left: -5px; }
+  .d-range .ends { display: flex; justify-content: space-between; font-size: 9px; color: var(--dim); margin-top: 5px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-top: 10px; }
+  .grid div { font-size: 9px; color: var(--dim); font-weight: 700; letter-spacing: 0.6px; }
+  .grid div span { display: block; font-size: 12px; color: var(--ink); letter-spacing: 0; }
+  .alert { margin-top: 8px; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 3px; border-radius: 4px;
+    background: var(--ink); color: var(--lcd-hi); animation: blink 1.2s steps(2) infinite; }
+  .hint { position: absolute; bottom: 21px; left: 12px; right: 12px; font-size: 8.5px; color: var(--dim); font-weight: 700; letter-spacing: 0.8px; text-align: center; }
+
+  /* key setup */
+  #setup { display: none; padding: 10px 12px; font-size: 11px; line-height: 1.45; user-select: text; }
+  #setup b { font-size: 11px; letter-spacing: 1px; }
+  #setup input { width: 100%; margin: 8px 0; padding: 6px 8px; font-size: 12px; border: 1.5px solid var(--ink); border-radius: 6px;
+    background: rgba(255,255,255,0.25); color: var(--ink); user-select: text; }
   #setup .btns { display: flex; gap: 6px; }
-  #setup .btn { flex: 1; text-align: center; padding: 5px 0; border: 2px solid #1c2a12; border-radius: 4px; font-weight: 700; }
-  #setup .btn.dark { background: #1c2a12; color: #a9bd8f; }
-  #setupMsg { margin-top: 6px; font-weight: 700; }
+  #setup .btn { flex: 1; text-align: center; padding: 6px 0; border: 1.5px solid var(--ink); border-radius: 14px; font-weight: 800; font-size: 10px; letter-spacing: 0.8px; }
+  #setup .btn.dark { background: var(--ink); color: var(--lcd-hi); }
+  #setupMsg { margin-top: 8px; font-weight: 700; }
 
-  .flash { animation: flash 0.5s steps(2) 6; }
-  @keyframes flash { 50% { background: #1c2a12; color: #a9bd8f; } }
+  .flash { animation: flash 0.45s steps(2) 6; }
+  @keyframes flash { 50% { filter: invert(1) hue-rotate(180deg); } }
 </style>
 </head>
 <body>
-<div id="lcd">
-  <div class="bar"><span id="title">WALL ST PAGER</span><span id="clock">--:--</span></div>
-  <div class="rows" id="rows"></div>
+<div id="lcd" class="ink">
+  <div class="bar"><span class="brand"><span class="sig" id="sig"><i></i><i></i><i></i><i></i></span><span id="title">WALL ST</span></span><span class="mono" id="clock">--:--</span></div>
+  <div class="tape mono"><span id="tape">LOADING QUOTES</span></div>
+  <div id="rows"></div>
   <div id="detail"></div>
   <div id="setup">
     <b>STOCK PRICES NEED A FREE KEY</b><br>
     Get one at finnhub.io, then type it here once. It stays on this r1 only.
-    <input id="keyIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="finnhub key">
+    <input id="keyIn" class="mono" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="finnhub key">
     <div class="btns"><span class="btn dark" id="saveKey">SAVE</span><span class="btn" id="skipKey">CRYPTO ONLY</span></div>
     <div id="setupMsg"></div>
   </div>
-  <div class="foot"><span id="mkt">LOADING</span><span id="upd">--</span></div>
+  <div class="foot"><span id="mkt"><i class="dot"></i>LOADING</span><span class="mono" id="upd">--</span></div>
 </div>
 
 <script>
-// Wall St Pager for the Rabbit R1. Built 10/1/2026.
+// Wall St Pager for the Rabbit R1. Built 10/1/2026, retro modern redesign the same day.
 // Stocks: Finnhub (free key, entered once on the r1 and kept in its storage, never in this page).
 // Crypto: CoinGecko's free public API, no key.
 // Controls: scroll wheel moves the highlight, side button opens or closes the detail screen,
-// hold the side button to refresh now, tap a row to open it, tap the title to change the key.
+// hold the side button to refresh now, tap a row to open it, tap WALL ST to change the key.
 var TICKERS = [
-  { sym: "SPY",  src: "fh",   id: "SPY",      name: "S&P 500 (SPY fund)" },
-  { sym: "TSLA", src: "fh",   id: "TSLA",     name: "Tesla" },
-  { sym: "BTC",  src: "coin", id: "bitcoin",  name: "Bitcoin" },
-  { sym: "SNAP", src: "fh",   id: "SNAP",     name: "Snap" },
+  { sym: "SPY",  src: "fh",   id: "SPY",      name: "S&P 500 · SPY" },
+  { sym: "TSLA", src: "fh",   id: "TSLA",     name: "TESLA" },
+  { sym: "BTC",  src: "coin", id: "bitcoin",  name: "BITCOIN" },
+  { sym: "SNAP", src: "fh",   id: "SNAP",     name: "SNAP" },
   { sym: "XRP",  src: "coin", id: "ripple",   name: "XRP" },
-  { sym: "DOGE", src: "coin", id: "dogecoin", name: "Dogecoin" },
-  { sym: "SPCX", src: "fh",   id: "SPCX",     name: "SpaceX" }
+  { sym: "DOGE", src: "coin", id: "dogecoin", name: "DOGECOIN" },
+  { sym: "SPCX", src: "fh",   id: "SPCX",     name: "SPACEX" }
 ];
 var PAGE_AT = 5;          // percent move that "pages" you
 var REFRESH_MS = 60000;   // once a minute (Finnhub free allows 60 calls a minute; this uses 4)
 
-var data = {}, sel = 0, view = "list", lastUpdate = 0, paged = {}, apiKey = "", keyChecked = false, stockError = "";
+var data = {}, sel = 0, view = "list", lastUpdate = 0, paged = {}, apiKey = "", stockError = "", ticks = {}, online = true;
 
 // ---------- storage: the r1's creation storage when available, else localStorage ----------
 function store(kind) { try { return window.creationStorage && window.creationStorage[kind]; } catch (e) { return null; } }
@@ -89,7 +147,6 @@ function setItem(key, value, kind) {
   var s = store(kind || "plain");
   if (s) { try { s.setItem(key, btoa(value)); } catch (e) {} }
 }
-
 function save() { setItem("pager", JSON.stringify({ data: data, lastUpdate: lastUpdate, paged: paged })); }
 
 // ---------- formatting ----------
@@ -99,8 +156,21 @@ function fmtPx(n) {
   if (n >= 1) return n.toFixed(2);
   return n.toFixed(4);
 }
+function fmtChg(c, px) {   // decimals follow the price: 4 for coins under $1, none at $1,000+, else 2
+  if (c == null || isNaN(c)) return "";
+  var a = Math.abs(c), s = c < 0 ? "-" : "+";
+  if (px != null && px < 1) return s + a.toFixed(4);
+  if (a >= 1000) return s + a.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return s + a.toFixed(2);
+}
 function fmtPct(p) { if (p == null || isNaN(p)) return "--"; return (p >= 0 ? "▲" : "▼") + Math.abs(p).toFixed(2) + "%"; }
+function badge(p) { return '<span class="badge mono ' + (p == null || isNaN(p) ? "none" : p >= 0 ? "up" : "down") + '">' + fmtPct(p) + '</span>'; }
 function clock(d) { return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+function rangeBar(q) {
+  if (!q || q.lo == null || q.hi == null || q.hi <= q.lo || q.px == null) return '<div class="range"></div>';
+  var at = Math.max(0, Math.min(100, (q.px - q.lo) / (q.hi - q.lo) * 100));
+  return '<div class="range"><b style="left:' + at.toFixed(1) + '%"></b></div>';
+}
 
 // US market session from New York time (does not know about holidays)
 function session() {
@@ -114,6 +184,12 @@ function session() {
 }
 
 // ---------- data ----------
+function setQuote(sym, q) {
+  var old = data[sym];
+  if (old && old.px != null && q.px != null && q.px !== old.px) ticks[sym] = Date.now();
+  data[sym] = q;
+}
+
 function fetchStocks() {
   if (!apiKey) return Promise.resolve();
   var list = TICKERS.filter(function (t) { return t.src === "fh"; });
@@ -126,8 +202,8 @@ function fetchStocks() {
       })
       .then(function (q) {
         if (!q || !q.c) return;   // no trade data for this symbol
-        data[t.sym] = { px: q.c, chg: q.d, pct: q.dp, open: q.o, hi: q.h, lo: q.l, prev: q.pc,
-                        time: q.t ? clock(new Date(q.t * 1000)) : "" };
+        setQuote(t.sym, { px: q.c, chg: q.d, pct: q.dp, open: q.o, hi: q.h, lo: q.l, prev: q.pc,
+                          time: q.t ? clock(new Date(q.t * 1000)) : "" });
       });
   })).then(function () { stockError = ""; }, function (e) {
     stockError = e && e.message === "KEY" ? "KEY REJECTED" : "STOCKS OFFLINE";
@@ -137,21 +213,25 @@ function fetchStocks() {
 
 function fetchCrypto() {
   var ids = TICKERS.filter(function (t) { return t.src === "coin"; }).map(function (t) { return t.id; }).join(",");
-  return fetch("https://api.coingecko.com/api/v3/simple/price?ids=" + ids + "&vs_currencies=usd&include_24hr_change=true")
-    .then(function (r) { return r.json(); })
-    .then(function (j) {
-      TICKERS.forEach(function (t) {
-        if (t.src !== "coin" || !j[t.id]) return;
-        data[t.sym] = { px: j[t.id].usd, pct: j[t.id].usd_24h_change, crypto: true, time: clock(new Date()) };
+  return fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=" + ids + "&price_change_percentage=24h")
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function (list) {
+      list.forEach(function (c) {
+        var t = TICKERS.filter(function (x) { return x.id === c.id; })[0];
+        if (!t) return;
+        setQuote(t.sym, { px: c.current_price, pct: c.price_change_percentage_24h, chg: c.price_change_24h,
+                          hi: c.high_24h, lo: c.low_24h, crypto: true,
+                          time: c.last_updated ? clock(new Date(c.last_updated)) : clock(new Date()) });
       });
       return true;
     });
 }
 
 function refresh() {
-  document.getElementById("upd").textContent = "...";
+  document.getElementById("upd").textContent = "SYNC";
   return Promise.all([fetchStocks().catch(function () {}), fetchCrypto().catch(function () { return false; })]).then(function (r) {
-    if (r[1]) lastUpdate = Date.now();
+    online = !!r[1];
+    if (online) lastUpdate = Date.now();
     checkPages(); save(); render();
   });
 }
@@ -173,39 +253,54 @@ function checkPages() {
 
 // ---------- screen ----------
 function render() {
-  var now = new Date();
+  var now = new Date(), today = now.toDateString();
   document.getElementById("clock").textContent = clock(now);
-  document.getElementById("mkt").textContent = stockError || session();
-  var mins = lastUpdate ? Math.round((Date.now() - lastUpdate) / 60000) : null;
-  document.getElementById("upd").textContent = mins == null ? "--" : (mins < 1 ? "LIVE" : mins + "M OLD");
+  var live = online && lastUpdate && Date.now() - lastUpdate < 120000;
+  document.getElementById("sig").className = "sig" + (live ? "" : " off");
+  document.getElementById("mkt").innerHTML = '<i class="dot' + (live ? " live" : "") + '"></i>' + (stockError || session());
+  document.getElementById("upd").textContent = lastUpdate ? "UPD " + clock(new Date(lastUpdate)) : "--";
+
+  // ticker tape
+  var tape = TICKERS.map(function (t) {
+    var q = data[t.sym]; if (!q || q.px == null) return null;
+    return t.sym + " " + fmtPx(q.px) + " " + fmtPct(q.pct);
+  }).filter(Boolean).join("   ·   ");
+  var tapeEl = document.getElementById("tape");
+  if (tape && tapeEl.textContent !== tape) tapeEl.textContent = tape;
 
   var rows = document.getElementById("rows"), detail = document.getElementById("detail"), setup = document.getElementById("setup");
   rows.style.display = view === "list" ? "block" : "none";
   detail.style.display = view === "detail" ? "block" : "none";
   setup.style.display = view === "setup" ? "block" : "none";
-  var today = now.toDateString();
 
   if (view === "list") {
     rows.innerHTML = TICKERS.map(function (t, i) {
-      var q = data[t.sym] || {};
-      var noKey = t.src === "fh" && !apiKey;
+      var q = data[t.sym] || {}, noKey = t.src === "fh" && !apiKey;
+      var fresh = ticks[t.sym] && Date.now() - ticks[t.sym] < 1500;
       var cls = "row" + (i === sel ? " sel" : "") + (paged[t.sym + " " + today] ? " page" : "");
-      return '<div class="' + cls + '" data-i="' + i + '"><span class="sym">' + t.sym + '</span><span class="px">' +
-        (noKey ? "NO KEY" : fmtPx(q.px)) + '</span><span class="ch">' + (noKey ? "" : fmtPct(q.pct)) + '</span></div>';
+      return '<div class="' + cls + '" data-i="' + i + '"><div class="top"><span class="sym">' + t.sym + '</span>' +
+        '<span class="px mono' + (fresh ? " tick" : "") + '">' + (noKey ? "NO KEY" : fmtPx(q.px)) + '</span>' +
+        (noKey ? '<span class="badge mono none">TAP WALL ST</span>' : badge(q.pct)) + '</div>' + rangeBar(noKey ? null : q) + '</div>';
     }).join("");
     Array.prototype.forEach.call(rows.querySelectorAll(".row"), function (el) {
       el.addEventListener("pointerup", function () { sel = +el.getAttribute("data-i"); view = "detail"; render(); });
     });
+    setTimeout(function () { Array.prototype.forEach.call(rows.querySelectorAll(".tick"), function (el) { el.classList.remove("tick"); }); }, 700);
   } else if (view === "detail") {
     var t = TICKERS[sel], q = data[t.sym] || {};
-    var html = '<div class="name">' + t.name.toUpperCase() + '</div><div class="big">' + fmtPx(q.px) + '</div>' +
-      '<div>' + fmtPct(q.pct) + (q.chg != null ? "  (" + (q.chg >= 0 ? "+" : "") + q.chg.toFixed(2) + ")" : "") + (q.crypto ? "  24H" : "") + '</div><br>';
-    if (q.open) html += '<div class="kv"><span>OPEN</span><span>' + fmtPx(q.open) + '</span></div>';
-    if (q.hi) html += '<div class="kv"><span>DAY HI/LO</span><span>' + fmtPx(q.hi) + " / " + fmtPx(q.lo) + '</span></div>';
-    if (q.prev) html += '<div class="kv"><span>PREV CLOSE</span><span>' + fmtPx(q.prev) + '</span></div>';
-    html += '<div class="kv"><span>AS OF</span><span>' + (q.time || "--") + '</span></div>';
-    if (t.sym === "SPY") html += '<div style="font-size:10px">S&amp;P 500 ~= SPY x 10</div>';
-    html += '<br><div style="font-size:10px">BUTTON: BACK  HOLD: REFRESH</div>';
+    var html = '<div class="d-head"><span>' + t.name + '</span><span>' + (q.crypto ? "24H" : "TODAY") + '</span></div>' +
+      '<div class="d-px mono">' + fmtPx(q.px) + '</div>' +
+      '<div class="d-chg">' + badge(q.pct) + '<span class="mono">' + fmtChg(q.chg, q.px) + '</span></div>' +
+      '<div class="d-range">' + rangeBar(q) + '<div class="ends mono"><span>L ' + fmtPx(q.lo) + '</span><span>H ' + fmtPx(q.hi) + '</span></div></div>' +
+      '<div class="grid mono">' +
+        (q.open ? '<div>OPEN<span>' + fmtPx(q.open) + '</span></div>' : "") +
+        (q.prev ? '<div>PREV CLOSE<span>' + fmtPx(q.prev) + '</span></div>' : "") +
+        '<div>AS OF<span>' + (q.time || "--") + '</span></div>' +
+        (t.sym === "SPY" ? '<div>S&amp;P 500<span>~' + fmtPx(q.px * 10) + '</span></div>' : "") +
+      '</div>' +
+      (paged[t.sym + " " + new Date().toDateString()]
+        ? '<div class="alert">PAGE · MOVED ' + Math.abs(q.pct || 0).toFixed(1) + '%</div>'
+        : '<div class="hint">BUTTON: BACK · HOLD: REFRESH</div>');
     detail.innerHTML = html;
   }
 }
@@ -254,7 +349,7 @@ var timer = null;
 function startTimer() { if (!timer) timer = setInterval(refresh, REFRESH_MS); }
 function stopTimer() { clearInterval(timer); timer = null; }
 document.addEventListener("visibilitychange", function () { if (document.hidden) stopTimer(); else { refresh(); startTimer(); } });
-setInterval(render, 30000);   // keep the clock and "M OLD" honest
+setInterval(render, 30000);   // keep the clock honest
 
 Promise.all([getItem("pager"), getItem("finnhubKey", "secure")]).then(function (v) {
   try { var s = JSON.parse(v[0] || "null"); if (s) { data = s.data || {}; lastUpdate = s.lastUpdate || 0; paged = s.paged || {}; } } catch (e) {}
