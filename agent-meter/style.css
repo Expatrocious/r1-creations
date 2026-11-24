@@ -1,0 +1,143 @@
+/* agent meter: r1 creation, 240x282. Black, warm white, one orange. */
+:root {
+  --bg: #000;
+  --card: #0c0c0c;
+  --line: #1c1c1c;
+  --fg: #eceae6;
+  --tiger: #dedcd9;
+  --muted: #8b8a86;
+  --dim: #4d4c4a;
+  --track: #1d1d1d;
+  --accent: #ff5300;
+  --accent-soft: rgba(255, 83, 0, .14);
+  --hot: #ff3b30;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 240px; height: 282px; overflow: hidden;
+  background: var(--bg); color: var(--fg);
+  font-family: "Inter", "Roboto", "Helvetica Neue", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#app {
+  position: relative;
+  width: 240px; height: 282px;
+  padding: 10px 10px 8px;
+  display: flex; flex-direction: column;
+}
+
+/* ---- header ---- */
+header { display: flex; align-items: center; gap: 7px; height: 24px; flex: none; }
+.mark { width: 17px; height: 24px; display: block; object-fit: contain; }
+#agent-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.pill {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-soft);
+  border-radius: 999px; padding: 3px 8px 2px;
+}
+#pager { display: flex; gap: 3px; }
+#pager i { width: 4px; height: 4px; border-radius: 50%; background: var(--dim); }
+#pager i.on { background: var(--fg); }
+
+/* ---- gauges ---- */
+#gauges {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 10px; flex: none;
+  transition: opacity .3s ease;
+}
+#gauges.single { grid-template-columns: 1fr; }
+.gauge {
+  appearance: none; -webkit-appearance: none;
+  border: 1px solid var(--line); background: var(--card); color: inherit; font: inherit;
+  border-radius: 18px; padding: 10px 4px 9px;
+  display: flex; flex-direction: column; align-items: center;
+  transition: transform .15s var(--ease), border-color .3s;
+}
+.gauge:active { transform: scale(.97); }
+.gauge.hot { border-color: rgba(255, 59, 48, .45); }
+.ring { position: relative; width: 84px; height: 84px; }
+.ring svg { display: block; width: 84px; height: 84px; transform: rotate(-90deg); overflow: visible; }
+.ring circle { fill: none; stroke-width: 7; }
+.ring .track { stroke: var(--track); }
+.ring .arc {
+  stroke: var(--accent); stroke-linecap: round;
+  transition: stroke-dashoffset .9s var(--ease), stroke .3s, opacity .3s;
+}
+.hot .ring .arc { stroke: var(--hot); }
+.ring .pace { stroke: none; transition: fill .3s; }
+.ring .value {
+  position: absolute; inset: 0;
+  display: flex; align-items: baseline; justify-content: center;
+  padding-top: 26px;
+}
+.ring .num { font-size: 27px; font-weight: 650; letter-spacing: -.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+.ring .unit { font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 1px; }
+.gauge .label {
+  margin-top: 7px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted);
+}
+.gauge .reset {
+  margin-top: 2px; font-size: 11px; color: var(--fg); opacity: .82;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+/* ---- one-line insight ---- */
+#insight {
+  margin-top: 9px; flex: none;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden;
+  padding: 0 4px;
+}
+#insight::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; flex: none;
+  background: var(--accent);
+}
+#insight.good::before { background: var(--tiger); }
+#insight.warn::before { background: var(--hot); }
+#insight b { color: var(--fg); font-weight: 600; }
+
+/* ---- extra windows ---- */
+#more { display: flex; flex-direction: column; gap: 7px; margin-top: 9px; flex: none; transition: opacity .3s ease; }
+.mini {
+  display: grid; grid-template-columns: 76px 1fr 30px; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--muted); padding: 0 4px;
+}
+.mini .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini .bar { height: 4px; border-radius: 2px; background: var(--track); overflow: hidden; }
+.mini .bar i { display: block; height: 100%; width: 0; border-radius: 2px; background: var(--accent); transition: width .9s var(--ease); }
+.mini.hot .bar i { background: var(--hot); }
+.mini b { text-align: right; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---- footer ---- */
+footer {
+  margin-top: auto; height: 18px; flex: none;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px; color: var(--muted);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); flex: none; transition: background .3s; }
+.dot.live { background: var(--accent); box-shadow: 0 0 6px rgba(255, 83, 0, .75); }
+.dot.bad { background: var(--hot); }
+.dot.busy { animation: pulse .8s ease-in-out infinite alternate; }
+#status { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#server { white-space: nowrap; }
+#server.on { color: var(--fg); opacity: .78; }
+
+/* ---- stale data ---- */
+.stale #gauges, .stale #more, .stale #insight { opacity: .5; }
+
+/* ---- splash (first load, setup, errors with nothing to show) ---- */
+#splash {
+  position: absolute; inset: 0; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  transition: opacity .4s ease, visibility .4s;
+}
+#splash img { width: 96px; height: 135px; object-fit: contain; }
+#splash p { font-size: 12px; line-height: 1.45; color: var(--muted); text-align: center; padding: 0 22px; }
+.loading #splash img { animation: breathe 2.4s ease-in-out infinite; }
+#app:not(.loading) #splash { opacity: 0; visibility: hidden; }
+
+@keyframes pulse { from { opacity: .25; } to { opacity: 1; } }
+@keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }

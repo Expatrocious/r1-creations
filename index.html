@@ -17,6 +17,7 @@
   .info img { width: 28px; height: 28px; border-radius: 6px; }
   .info a { color: var(--accent); }
   ol { color: var(--muted); padding-left: 18px; line-height: 1.6; }
+  .personal { max-width: 320px; margin: 0; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -41,7 +42,11 @@
     { folder: "tasbih", title: "Tasbih", version: 1, themeColor: "#d4b25a",
       description: "Dhikr counter. 33, 33, 34 after salah." },
     { folder: "pager", title: "Wall St Pager", version: 2, themeColor: "#5dff94",
-      description: "SPY, TSLA, BTC, SNAP, XRP, DOGE, SPCX." }
+      description: "SPY, TSLA, BTC, SNAP, XRP, DOGE, SPCX." },
+    // personal: its QR holds the address of the PC's private usage feed, so it is made on
+    // the PC (agent-meter qr, saved to ~/Pictures/agent-meter-qr.png) and not shown here
+    { folder: "agent-meter", title: "Agent Meter", version: 1, themeColor: "#ff5300", personal: true,
+      description: "Claude usage at a glance: session and week rings, reset times." }
   ];
   var base = location.origin + location.pathname.replace(/index\.html$/, "").replace(/\/?$/, "/");
   var list = document.getElementById("list");
@@ -54,6 +59,11 @@
     card.innerHTML = '<div class="qr"></div><div class="info"><h2><img alt="" src="' + c.folder + '/icon.png?v=' + c.version + '">' +
       c.title + '</h2><p>' + c.description + '</p><p><a href="' + url + '">Open in this browser</a></p></div>';
     list.appendChild(card);
+    if (c.personal) {
+      card.querySelector(".qr").outerHTML = '<p class="personal">Personal creation: install it with the QR code made on the PC ' +
+        '(<code>agent-meter qr</code>, saved to <code>~/Pictures/agent-meter-qr.png</code>).</p>';
+      return;
+    }
     // Same settings as rabbit's own QR tool: large, lowest error correction, so the code is as sparse as possible for the R1 camera.
     new QRCode(card.querySelector(".qr"), { text: payload, width: 320, height: 320, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
   });

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=240, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="referrer" content="no-referrer">
+<title>agent meter</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app" class="loading">
+  <header>
+    <img class="mark" src="mark.svg" alt="">
+    <span id="agent-name">claude</span>
+    <span id="pager" aria-hidden="true"></span>
+    <span id="plan" class="pill" hidden></span>
+  </header>
+  <section id="gauges" aria-live="polite"></section>
+  <p id="insight" hidden></p>
+  <section id="more"></section>
+  <footer id="footer">
+    <span id="dot" class="dot"></span>
+    <span id="status">connecting…</span>
+    <span id="server"></span>
+  </footer>
+  <div id="splash">
+    <img src="mark.svg" alt="">
+    <p id="splash-text">connecting…</p>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

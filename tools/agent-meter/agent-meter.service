@@ -1,0 +1,16 @@
+[Unit]
+Description=agent meter: publish AI agent usage to a secret gist for the rabbit r1 creation
+Documentation=file://%h/Projects/r1-creations/tools/agent-meter/README.md
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart=/usr/bin/python3 -I %h/Projects/r1-creations/tools/agent-meter/agent_meter.py run
+Environment=PATH=%h/.local/share/mise/command-wrappers/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin
+Restart=always
+RestartSec=30
+# exit 2 = not set up yet (no gist): wait for `agent-meter setup` instead of looping
+RestartPreventExitStatus=2
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target
